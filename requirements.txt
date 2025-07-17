@@ -1,0 +1,4 @@
+streamlit>=1.0
+pandas
+pykrx        # stock_data.py에서 사용 중이라면
+tqdm         # 진행바 라이브러리 사용 시

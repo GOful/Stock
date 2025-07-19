@@ -7,16 +7,18 @@ import pandas as pd
 from datetime import datetime, date, timedelta
 import bisect
 
-# ──── 1) 경로 설정 ────────────────────────────────────
-BASE_DIR    = os.path.dirname(__file__)                        # 이 파일(stock_view.py)의 위치
-DATA_SCRIPT = os.path.join(BASE_DIR, "stock_data.py")          # stock_data.py 절대경로
-DB_FILE     = os.path.join(BASE_DIR, "market_ohlcv.db")        # DB 파일 절대경로
+# ──── 0) 베이스 디렉토리(이 .py 파일이 있는 디렉토리) ──────
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# ──── 2) 페이지 로드 시: DB 업데이트 및 상태 표시 ───────
+# ──── 1) 파일 경로 설정 (모두 BASE_DIR 기준으로) ──────────
+DATA_SCRIPT = os.path.join(BASE_DIR, "stock_data.py")
+DB_FILE     = os.path.join(BASE_DIR, "market_ohlcv.db")
+
+# ──── 2) 페이지 로드 시: DB 업데이트 및 상태 표시 ──────────
 if "db_updated" not in st.session_state:
     with st.spinner("앱 시작: DB 업데이트 중입니다..."):
-        subprocess.run([sys.executable, DATA_SCRIPT], check=True)  # 절대경로 사용
-    conn = sqlite3.connect(DB_FILE)                               # 절대경로 사용
+        subprocess.run([sys.executable, DATA_SCRIPT], check=True)
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT MAX(date) FROM market_ohlcv")
     latest_date_str = cursor.fetchone()[0]
@@ -25,9 +27,11 @@ if "db_updated" not in st.session_state:
     st.success(f"DB 업데이트 완료: 최신 DB 날짜: {latest_date}")
     st.session_state["db_updated"] = True
 
+
+
 # --- 데이터 로드 헬퍼 ---
 @st.cache_data(ttl=3600)
-def load_data(db_path="market_ohlcv.db"):
+def load_data(db_path=DB_FILE):
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(
         "SELECT date, ticker, name AS 종목명, open, high, low, close, volume, value, change_rate FROM market_ohlcv",
@@ -57,7 +61,7 @@ default_start = default_end - timedelta(days=200)
 st.title("필터 조건 기반 종목 추천")
 
 # --- 사이드바: DB 경로 & 날짜 선택 ---
-db_path     = st.sidebar.text_input("SQLite DB 경로", value="market_ohlcv.db")
+db_path     = st.sidebar.text_input("SQLite DB 경로", value=DB_FILE)
 start_date  = st.sidebar.date_input("시작 날짜", default_start)
 end_date    = st.sidebar.date_input("종료 날짜", default_end)
 

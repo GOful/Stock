@@ -38,7 +38,18 @@ print(f"데이터 수집 구간: {start_date} ▶ {end_date}")
 # ————————————————————————————————
 # 3) DB 연결 및 테이블 생성
 # ————————————————————————————————
-conn = sqlite3.connect("market_ohlcv.db")
+import os
+from pathlib import Path
+
+# 스크립트(.py) 파일이 있는 디렉터리
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH  = BASE_DIR / "market_ohlcv.db"
+
+print("cwd:", os.getcwd())
+print("DB absolute path:", DB_PATH)
+
+# -- 여기서만 connect! --
+conn   = sqlite3.connect(str(DB_PATH))
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS market_ohlcv (
@@ -56,10 +67,6 @@ CREATE TABLE IF NOT EXISTS market_ohlcv (
 )
 """)
 conn.commit()
-
-import os
-print("cwd:", os.getcwd())
-print("DB absolute path:", os.path.abspath("market_ohlcv.db"))
 
 # ————————————————————————————————
 # 4) 200일 이전 데이터 삭제

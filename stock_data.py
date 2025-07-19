@@ -57,6 +57,9 @@ CREATE TABLE IF NOT EXISTS market_ohlcv (
 """)
 conn.commit()
 
+import os
+print("cwd:", os.getcwd())
+print("DB absolute path:", os.path.abspath("market_ohlcv.db"))
 
 # ————————————————————————————————
 # 4) 200일 이전 데이터 삭제

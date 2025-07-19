@@ -69,10 +69,10 @@ CREATE TABLE IF NOT EXISTS market_ohlcv (
 conn.commit()
 
 # ————————————————————————————————
-# 4) 200일 이전 데이터 삭제
+# 4) 202일 이전 데이터 삭제
 # ————————————————————————————————
 # 문자열 YYYYMMDD 로 저장되어 있으므로 그대로 비교해도古い日付が削除できます.
-cutoff_date = (end_date - timedelta(days=200)).strftime("%Y%m%d")
+cutoff_date = (end_date - timedelta(days=202)).strftime("%Y%m%d")
 cursor.execute("DELETE FROM market_ohlcv WHERE date < ?", (cutoff_date,))
 conn.commit()
 print(f"{cutoff_date} 이전 데이터 삭제 완료")

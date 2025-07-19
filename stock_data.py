@@ -33,7 +33,7 @@ else:
 # ————————————————————————————————
 # 2) 시작일(start_date)은 end_date 기준 7일 전
 # ————————————————————————————————
-start_date = end_date - timedelta(days=3)
+start_date = end_date - timedelta(days=7)
 print(f"데이터 수집 구간: {start_date} ▶ {end_date}")
 # ————————————————————————————————
 # 3) DB 연결 및 테이블 생성
@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS market_ohlcv (
 )
 """)
 conn.commit()
+
+
+# ————————————————————————————————
+# 4) 200일 이전 데이터 삭제
+# ————————————————————————————————
+# 문자열 YYYYMMDD 로 저장되어 있으므로 그대로 비교해도古い日付が削除できます.
+cutoff_date = (end_date - timedelta(days=200)).strftime("%Y%m%d")
+cursor.execute("DELETE FROM market_ohlcv WHERE date < ?", (cutoff_date,))
+conn.commit()
+print(f"{cutoff_date} 이전 데이터 삭제 완료")
 
 # ————————————————————————————————
 # 4) 날짜 생성기

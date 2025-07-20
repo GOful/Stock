@@ -4,7 +4,7 @@ import subprocess
 import sqlite3
 import bisect
 from datetime import datetime, date, timedelta
-
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import streamlit as st
 import pandas as pd
 
@@ -293,22 +293,54 @@ class UIManager:
 
     @staticmethod
     def show_results(tickers: set, latest: dict, end_date: date):
-        # 최종 추천 종목 데이터를 표 형태로 표시
         df0 = latest['0']
-        df_res = df0[df0['ticker'].isin(tickers)].copy()
-        df_res = df_res.sort_values('value', ascending=False)
-        df_res.index = range(1, len(df_res)+1)
-        st.subheader(f"추천 종목 ({len(df_res)}개)에 대한 {end_date} 데이터")
-        if not df_res.empty:
-            # 컬럼명 한글화 및 순서 지정
-            df_res = df_res.rename(columns={
-                'ticker':'종목코드','종목명':'종목명','open':'시가','high':'고가',
-                'low':'저가','close':'종가','volume':'거래량','value':'거래대금','change_rate':'등락률'
-            })
-            # 인덱스를 종목코드로 설정 후 데이터프레임 표시
-            st.dataframe(df_res.set_index('종목코드')[['종목명','시가','고가','저가','종가','거래량','거래대금','등락률']], use_container_width=True)
-        else:
+        df = df0[df0['ticker'].isin(tickers)].copy()
+        df = df.sort_values('value', ascending=False).reset_index(drop=True)
+        df.index += 1
+
+        st.subheader(f"추천 종목 ({len(df)}개)에 대한 {end_date} 데이터")
+        if df.empty:
             st.info("조건에 맞는 종목이 없습니다.")
+            return
+
+        # 한글 컬럼명 바꾸기
+        df = df.rename(columns={
+            'ticker':'종목코드','name':'종목명','open':'시가','high':'고가',
+            'low':'저가','close':'종가','volume':'거래량',
+            'value':'거래대금','change_rate':'등락률'
+        })
+
+        # 차트 URL 컬럼 추가
+        df['차트'] = df['종목코드'].apply(
+            lambda c: f"https://finance.naver.com/item/fchart.naver?code={c}"
+        )
+
+        # 화면에 보여줄 순서대로 슬라이싱
+        display_cols = ['종목코드','차트','종목명','시가','고가','저가','종가','거래량','거래대금','등락률']
+        df_display = df[display_cols]
+
+        # **고정 폭**을 이렇게 모두 동일하게 줘 보세요 (px 단위)
+        #  예: 10개 컬럼이면 총 컨테이너 폭이 1000px일 때 100px씩
+        FIXED_WIDTH = 100
+        column_cfg = {
+            col: st.column_config.Column(width=FIXED_WIDTH)
+            for col in df_display.columns
+        }
+        # 차트 컬럼만 LinkColumn으로 교체
+        column_cfg['차트'] = st.column_config.LinkColumn(
+            label='차트',
+            width=FIXED_WIDTH,
+            display_text='📈'          # 이 아이콘이 보여집니다
+        )
+
+        st.data_editor(
+            df_display,
+            hide_index=True,
+            column_config=column_cfg,
+            width=None,   # 컨테이너 전체 폭 사용
+            height=400
+        )
+
 
 
 class StockRecommenderApp:

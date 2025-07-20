@@ -1,0 +1,6 @@
+# .streamlitignore
+.venv/
+__pycache__/
+*.pyc
+.devcontainer/
+*.db

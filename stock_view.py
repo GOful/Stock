@@ -7,6 +7,8 @@ import pandas as pd
 from datetime import datetime, date, timedelta
 import bisect
 
+st.set_page_config(layout="wide")
+
 # ──── 0) 베이스 디렉토리(이 .py 파일이 있는 디렉토리) ──────
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 

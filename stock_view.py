@@ -62,8 +62,11 @@ st.title("필터 조건 기반 종목 추천")
 
 # --- 사이드바: DB 경로 & 날짜 선택 ---
 db_path     = st.sidebar.text_input("SQLite DB 경로", value=DB_FILE)
-start_date  = st.sidebar.date_input("시작 날짜", default_start)
-end_date    = st.sidebar.date_input("종료 날짜", default_end)
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    start_date = st.date_input("조회기간 - 부터 ", value=default_start, key="start")
+with col2:
+    end_date = st.date_input("까지", value=default_end, key="end")
 
 # --- 사이드바: 필터조건 및 논리 ---
 conds = []

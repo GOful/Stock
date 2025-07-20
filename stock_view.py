@@ -147,6 +147,7 @@ class SidebarManager:
         cols = st.sidebar.columns(2)
         start_date = cols[0].date_input("조회기간 - 부터", value=default_start)
         end_date = cols[1].date_input("까지", value=default_end)
+        st.sidebar.markdown("---")
 
         conditions, key_map = [], {}
         # D-필터 0~2: 일봉 양/음봉 필터
@@ -154,8 +155,8 @@ class SidebarManager:
             use = st.sidebar.checkbox(f"D-{i} 일봉", key=f"day{i}_use")
             if use:
                 dir_col, logic_col = st.sidebar.columns([3,1])
-                direction = dir_col.radio("", ["양봉", "음봉"], key=f"day{i}_dir", horizontal=True)
-                logic = logic_col.radio("", ["AND", "OR"], key=f"day{i}_logic", horizontal=True)
+                direction = dir_col.radio("양음방향", ["양봉", "음봉"], key=f"day{i}_dir", horizontal=True, label_visibility="collapsed")
+                logic = logic_col.radio("양음조건", ["AND", "OR"], key=f"day{i}_logic", horizontal=True, label_visibility="collapsed")
                 # 양봉이면 'pos', 음봉이면 'neg'
                 typ = 'pos' if direction == '양봉' else 'neg'
                 name = f"{typ}{i}"
@@ -166,14 +167,14 @@ class SidebarManager:
 
         # 거래대금 필터: 기간 중 최대 거래대금 ≥ 500억
         if st.sidebar.checkbox("기간 중 거래대금 ≥500억", key="value_chk"):
-            logic = st.sidebar.radio("", ["AND","OR"], key="value_logic", label_visibility="collapsed")
+            logic = st.sidebar.radio("거래대금", ["AND","OR"], key="value_logic", label_visibility="collapsed")
             conditions.append(FilterCondition("value_cond", "거래대금 ≥500억", logic))
             key_map["value_cond"] = "거래대금 ≥500억"
         st.sidebar.markdown("---")
 
         # 종가 상승 필터: 종가 상승율 < 3배
         if st.sidebar.checkbox("종가 상승 3배 미만", key="price_chk"):
-            logic = st.sidebar.radio("", ["AND","OR"], key="price_logic", label_visibility="collapsed")
+            logic = st.sidebar.radio("종가 상승", ["AND","OR"], key="price_logic", label_visibility="collapsed")
             conditions.append(FilterCondition("price_cond", "종가 상승 <3배", logic))
             key_map["price_cond"] = "종가 상승 <3배"
         st.sidebar.markdown("---")

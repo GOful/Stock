@@ -64,7 +64,7 @@ class DataManager:
     def __init__(self, db_path: str):
         self.db_path = db_path  # DB 파일 경로
 
-    @st.cache_data(ttl=3600)
+    #@st.cache_data(ttl=3600)
     def load_data(_self) -> pd.DataFrame:
         """
         DB에서 시계열 OHLCV 데이터를 조회하여 판다스 DataFrame으로 반환

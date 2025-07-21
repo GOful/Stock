@@ -63,10 +63,18 @@ CREATE TABLE IF NOT EXISTS market_ohlcv (
     volume INTEGER,
     value REAL,
     change_rate REAL,
+    market_cap REAL,
     PRIMARY KEY (date, ticker)
 )
 """)
 conn.commit()
+
+# (이미 테이블이 있었다면 아래 ALTER 로컬럼 추가)
+cursor.execute("PRAGMA table_info(market_ohlcv)")
+cols = [row[1] for row in cursor.fetchall()]
+if "market_cap" not in cols:
+    cursor.execute("ALTER TABLE market_ohlcv ADD COLUMN market_cap REAL")
+    conn.commit()
 
 # ————————————————————————————————
 # 4) 202일 이전 데이터 삭제
@@ -87,40 +95,73 @@ def daterange(start_date, end_date):
 # ————————————————————————————————
 # 5) 데이터 수집 및 저장
 # ————————————————————————————————
+
 for single_date in daterange(start_date, end_date):
     date_str = single_date.strftime("%Y%m%d")
+
     try:
-        # 이미 해당 날짜 데이터 존재 여부 확인
-        cursor.execute("SELECT 1 FROM market_ohlcv WHERE date=? LIMIT 1", (date_str,))
+        # 1) 중복 검사
+        cursor.execute(
+            "SELECT 1 FROM market_ohlcv WHERE date=? LIMIT 1",
+            (date_str,)
+        )
         if cursor.fetchone():
             print(f"{date_str} ▶ 이미 데이터 존재, 스킵")
             continue
 
-        df = stock.get_market_ohlcv(date_str, market="ALL")
-        if df is None or df.empty:
+        # 2) OHLCV 불러오기
+        df_ohlcv = stock.get_market_ohlcv(date_str, market="ALL")
+        if df_ohlcv is None or df_ohlcv.empty:
             print(f"{date_str} ▶ 시장 휴장 혹은 데이터 없음, 스킵")
             continue
 
-        ohlcv = df.iloc[:, :7].copy()
-        ohlcv.columns = ["open","high","low","close","volume","value","change_rate"]
+        ohlcv = df_ohlcv.iloc[:, :7].copy()
+        ohlcv.columns = [
+            "open","high","low","close",
+            "volume","value","change_rate"
+        ]
         ohlcv["date"]   = date_str
         ohlcv["ticker"] = ohlcv.index
-        ohlcv["name"]   = ohlcv["ticker"].apply(stock.get_market_ticker_name)
+        ohlcv["name"]   = ohlcv["ticker"].apply(
+            stock.get_market_ticker_name
+        )
 
-        # close가 0인 행 제거
+        # ticker 문자열 6자리 통일
+        ohlcv["ticker"] = ohlcv.index.map(lambda x: str(x).zfill(6))
+
+        # --- 4) 시가총액 불러오기 & 정리 ---
+        cap_df = stock.get_market_cap_by_ticker(date_str, market="ALL")
+        #print(cap_df.head(), cap_df.columns)
+        cap_df = cap_df.rename(columns={"시가총액": "market_cap"})
+        cap_df = cap_df[["market_cap"]]
+        cap_df.index = cap_df.index.map(lambda x: str(x).zfill(6))
+
+        #print("ohlcv sample ticker:", ohlcv["ticker"].head().tolist())
+        #print("ohlcv ticker dtype:", ohlcv["ticker"].dtype)
+        # --- 5) join 으로 병합 ---
+        ohlcv = ohlcv.set_index("ticker")
+        ohlcv = ohlcv.join(cap_df["market_cap"], how="left")
+        ohlcv = ohlcv.reset_index()
+
+        # 5) 휴장일 필터링(close == 0)
         ohlcv = ohlcv[ohlcv["close"] != 0]
         if ohlcv.empty:
-            print(f"{date_str} ▶ close가 0인 데이터만 있어 스킵(휴장일)")
+            print(f"{date_str} ▶ close가 0인 데이터만 있어 스킵")
             continue
 
+        # 6) DB에 저장
         ohlcv[[
             "date","ticker","name","open","high","low",
-            "close","volume","value","change_rate"
-        ]].to_sql("market_ohlcv", conn, if_exists="append", index=False)
+            "close","volume","value","change_rate",
+            "market_cap"
+        ]].to_sql("market_ohlcv", conn,
+                  if_exists="append", index=False)
 
         print(f"{date_str} ▶ {len(ohlcv)}건 저장 완료")
 
     except Exception as e:
         print(f"Error on {date_str}: {e}")
+        # 에러 난 날도 넘기고 다음 날짜로 진행
+        continue
 
 conn.close()

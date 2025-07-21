@@ -76,7 +76,7 @@ class DataManager:
         conn = sqlite3.connect(_self.db_path)
         df = pd.read_sql_query(
             """
-            SELECT date, ticker, name AS 종목명, open, high, low, close, volume, value, change_rate
+            SELECT date, ticker, name AS 종목명, open, high, low, close, volume, value, change_rate, market_cap
             FROM market_ohlcv
             """,
             conn,
@@ -294,7 +294,7 @@ class UIManager:
     def show_results(tickers: set, latest: dict, end_date: date):
         df0 = latest['0']
         df = df0[df0['ticker'].isin(tickers)].copy()
-        df = df.sort_values('value', ascending=False).reset_index(drop=True)
+        df = df.sort_values('market_cap', ascending=False).reset_index(drop=True)
         df.index += 1
 
         st.subheader(f"추천 종목 ({len(df)}개)에 대한 {end_date} 데이터")
@@ -306,7 +306,7 @@ class UIManager:
         df = df.rename(columns={
             'ticker':'종목코드','name':'종목명','open':'시가','high':'고가',
             'low':'저가','close':'종가','volume':'거래량',
-            'value':'거래대금','change_rate':'등락률'
+            'value':'거래대금','change_rate':'등락률','market_cap':'시가총액'
         })
 
         # 차트 URL 컬럼 추가
@@ -315,7 +315,7 @@ class UIManager:
         )
 
         # 화면에 보여줄 순서대로 슬라이싱
-        display_cols = ['종목코드','차트','종목명','시가','고가','저가','종가','거래량','거래대금','등락률']
+        display_cols = ['종목코드','차트','종목명','시가총액','시가','고가','저가','종가','거래량','거래대금','등락률']
         df_display = df[display_cols]
 
         # **고정 폭**을 이렇게 모두 동일하게 줘 보세요 (px 단위)

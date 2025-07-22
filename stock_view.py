@@ -38,6 +38,10 @@ class DatabaseUpdater:
                 # 외부 데이터 수집 스크립트(stock_data.py)를 실행
                 subprocess.run([sys.executable, self.data_script], check=True)
 
+                        # ── 디버그용 로그 추가 ──
+            st.write("현재 작업 디렉터리:", os.getcwd())
+            st.write("Config.DB_FILE 경로:", self.db_file)
+
             # 업데이트 완료 후 DB에서 최신 날짜 조회
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()

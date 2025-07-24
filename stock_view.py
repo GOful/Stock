@@ -15,36 +15,45 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 class Config:
     def __init__(self):
+        # 1) base_dir 계산
         base_dir = Path(__file__).parent
-        st.sidebar.write(f"[Config] 1) base_dir = {base_dir}")
+        print(f"[Config] 1) base_dir = {base_dir}")
+        # st.write(f"[Config] 1) base_dir = {base_dir}")
 
+        # 2) db_path, test_file 설정
         db_path   = base_dir / "market_ohlcv.db"
         test_file = base_dir / ".writetest"
-        st.sidebar.write(f"[Config] 2) db_path   = {db_path}")
-        st.sidebar.write(f"[Config] 3) test_file = {test_file}")
+        print(f"[Config] 2) db_path   = {db_path}")
+        print(f"[Config] 3) test_file = {test_file}")
 
+        # 3) 쓰기 테스트
         try:
-            st.sidebar.write("[Config] 4) 쓰기 테스트 시작…")
-            with open(test_file, "w") as f: f.write("ok")
-            st.sidebar.write("[Config] 5) 쓰기 성공 → 테스트 파일 생성됨")
+            print("[Config] 4) 쓰기 테스트 시작..…")
+            with open(test_file, "w") as f:
+                f.write("ok")
+            print("[Config] 5) 쓰기 성공 → 테스트 파일 생성됨") 
             test_file.unlink()
-            st.sidebar.write("[Config] 6) 테스트 파일 삭제 완료")
+            print("[Config] 6) 테스트 파일 삭제 완료")
 
+            # 4) 정상 경로 사용
             self.DB_FILE = str(db_path)
-            st.sidebar.write(f"[Config] 7) 최종 DB_FILE = {self.DB_FILE}")
+            print(f"[Config] 7) 최종 DB_FILE = {self.DB_FILE}")
 
         except (OSError, PermissionError) as e:
-            st.sidebar.write(f"[Config] 4) 쓰기 실패: {e}")
+            print(f"[Config] 4) 쓰기 실패: {e}")
 
+            # 5) 대체 폴더 생성
             home = Path.home() / ".streamlit" / "stock_app"
-            st.sidebar.write(f"[Config] 5) 대체 디렉터리 생성 → {home}")
+            print(f"[Config] 5) 대체 디렉터리 생성 → {home}")
             home.mkdir(parents=True, exist_ok=True)
 
+            # 6) 대체 경로 사용
             self.DB_FILE = str(home / "market_ohlcv.db")
-            st.sidebar.write(f"[Config] 7) 최종 DB_FILE = {self.DB_FILE}")
+            print(f"[Config] 7) 최종 DB_FILE = {self.DB_FILE}")
 
+        # 7) DATA_SCRIPT 경로
         self.DATA_SCRIPT = str(base_dir / "stock_data.py")
-        st.sidebar.write(f"[Config] 8) DATA_SCRIPT = {self.DATA_SCRIPT}")
+        print(f"[Config] 8) DATA_SCRIPT = {self.DATA_SCRIPT}")
 
 
 class DatabaseUpdater:

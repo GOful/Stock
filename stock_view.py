@@ -14,7 +14,7 @@ class Config:
     - DB 파일 경로 및 데이터 스크립트 경로를 초기화 시에 계산
     """
     def __init__(self):
-        # 현재 파일의 절대 경로를 기반으로 기본 디렉토리 설정
+        # 현재 파일의 절대 경로를 기반으로 기본 디렉토리 설정!
         base_dir = os.path.abspath(os.path.dirname(__file__))
         # 시장 OHLCV 데이터가 저장된 SQLite DB 파일 경로
         self.DB_FILE = os.path.join(base_dir, "market_ohlcv.db")

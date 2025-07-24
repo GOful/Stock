@@ -11,13 +11,17 @@ import warnings
 logging.getLogger("streamlit.elements.lib.policies").setLevel(logging.ERROR)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# 접속 시간 기록 설정
+logging.basicConfig(
+    format="%(asctime)s  접속 기록  %(message)s",
+    level=logging.INFO,
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 class Config:
     def __init__(self):
-        # 앱 기준 디렉터리
         base_dir = Path(__file__).parent
-        # SQLite DB 파일 경로
         self.DB_FILE = str(base_dir / "market_ohlcv.db")
-        # 데이터 업데이트 스크립트 경로
         self.DATA_SCRIPT = str(base_dir / "stock_data.py")
 
 class DatabaseUpdater:
@@ -25,9 +29,8 @@ class DatabaseUpdater:
         self.db_file = config.DB_FILE
 
     def update(self) -> date:
-        # 최초 실행 시 한 번만 최신 DB 날짜를 읽어와 표시
         if "db_updated" not in st.session_state:
-            with st.spinner("앱 시작: DB 최신 날짜를 조회 중입니다..."):
+            with st.spinner("앱 시작: DB 최신화 정보를 불러오는 중입니다..."):
                 pass
             conn = sqlite3.connect(self.db_file)
             latest_str = conn.cursor().execute(
@@ -107,7 +110,7 @@ class SidebarManager:
                 )
                 if use and direction:
                     typ   = 'pos' if direction=="양봉" else 'neg'
-                    name  = f"{typ}{i}"
+                    name  = f"{typ} {i}"
                     label = f"D-{i} {direction}"
                     conditions.append(FilterCondition(name, label, logic))
                     key_map[name] = label
@@ -177,17 +180,14 @@ class RecommendationEngine:
             mask = df_day['change_rate']>0 if cond.name.startswith("pos") else df_day['change_rate']<0
             return set(df_day[mask]['ticker'])
         if cond.name == "junk":
-            # 1) 거래대금 ≥500억
             s1 = set(
                 self.df_period.groupby('ticker')['value']
                               .max().loc[lambda x: x>=5e10]
                               .index
             )
-            # 2) 종가 상승 <3배
             min_close = self.df_period.groupby('ticker')['close'].min()
             latest_c  = self.latest['0'].set_index('ticker')['close']
             s2 = set((latest_c / min_close).loc[lambda x: x<3].index)
-            # 3) 스팩/우선주 제외 & 종가 ≥1000
             df0 = self.latest['0'].set_index('ticker')
             s3 = {
                 t for t in latest_c.index
@@ -203,6 +203,10 @@ class RecommendationEngine:
 class UIManager:
     @staticmethod
     def show_title():
+        # 첫 접속 시 로그 남기기
+        if "session_logged" not in st.session_state:
+            logging.info("새 세션 시작")
+            st.session_state["session_logged"] = True
         st.title("필터 조건 기반 종목 추천")
 
     @staticmethod
@@ -234,7 +238,7 @@ class UIManager:
             return
 
         df = df.rename(columns={
-            'ticker':'종목코드','종목명':'종목명','open':'시가','high':'고가',
+            'ticker':'종목코드','name':'종목명','open':'시가','high':'고가',
             'low':'저가','close':'종가','volume':'거래량',
             'value':'거래대금','change_rate':'등락률','market_cap':'시가총액'
         })
@@ -271,6 +275,9 @@ class StockRecommenderApp:
         self.calendar     = CalendarManager()
 
     def run(self):
+        # 앱 실행 시 터미널에 접속 기록
+        logging.info("StockRecommenderApp 실행")
+
         st.set_page_config(layout="wide")
         UIManager.show_title()
 
@@ -295,7 +302,7 @@ class StockRecommenderApp:
                     df_all['date_only']==
                     self.calendar.prev_trading_day(trading_days, end_date - timedelta(days=i))
                 ]
-                for i in [0,1,2]
+ for i in [0,1,2]
             }
 
             MetricsManager(conditions, latest, df_period).show()

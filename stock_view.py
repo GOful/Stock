@@ -21,8 +21,10 @@ logging.basicConfig(
 )
 
 ua_info = browser_detection_engine()  # singleRun=True 기본값으로 한번만 실행
-user_agent = ua_info.get("userAgent", "Unknown")
-
+if ua_info is None:
+    user_agent = "Unknown"
+else:
+    user_agent = ua_info.get("userAgent", "Unknown")
 class Config:
     def __init__(self):
         base_dir = Path(__file__).parent

@@ -28,10 +28,10 @@ class Config:
 
         # 3) 쓰기 테스트
         try:
-            print("[Config] 4) 쓰기 테스트 시작…")
+            print("[Config] 4) 쓰기 테스트 시작..…")
             with open(test_file, "w") as f:
                 f.write("ok")
-            print("[Config] 5) 쓰기 성공 → 테스트 파일 생성됨")
+            print("[Config] 5) 쓰기 성공 → 테스트 파일 생성됨") 
             test_file.unlink()
             print("[Config] 6) 테스트 파일 삭제 완료")
 

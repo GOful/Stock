@@ -2,3 +2,4 @@ streamlit>=1.0
 pandas
 pykrx        # stock_data.py에서 사용 중이라면
 ntplib
+streamlit-browser-engine

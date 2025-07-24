@@ -276,7 +276,7 @@ class StockRecommenderApp:
 
     def run(self):
         # 앱 실행 시 터미널에 접속 기록
-        logging.info("StockRecommenderApp 실행")
+        logging.info("종목추천 실행")
 
         st.set_page_config(layout="wide")
         UIManager.show_title()

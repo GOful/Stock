@@ -20,7 +20,7 @@ def get_now_seoul():
     return dt_utc.astimezone(seoul_tz)
 
 # ————————————————————————————————
-# 1) 오늘/어제 기준으로 수집 종결일(end_date) 결정
+# 1) 오늘/어제 기준으로 수집 종결일(end_date) 결정~
 # ————————————————————————————————
 now = get_now_seoul()
 today = now.date()

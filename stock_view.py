@@ -333,7 +333,7 @@ class UIManager:
         column_cfg['차트'] = st.column_config.LinkColumn(
             label='차트',
             width=FIXED_WIDTH,
-            display_text='📈'          # 이 아이콘이 보여집니다
+            display_text='📈'          # 이 아이콘이 보여집니다!
         )
 
         st.data_editor(

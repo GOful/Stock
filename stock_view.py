@@ -6,20 +6,40 @@ import bisect
 from datetime import datetime, date, timedelta
 import streamlit as st
 import pandas as pd
+from pathlib import Path
 
 
 class Config:
-    """
-    애플리케이션 설정 경로를 관리하는 클래스
-    - DB 파일 경로 및 데이터 스크립트 경로를 초기화 시에 계산
-    """
     def __init__(self):
-        # 현재 파일의 절대 경로를 기반으로 기본 디렉토리 설정!
-        base_dir = os.path.abspath(os.path.dirname(__file__))
-        # 시장 OHLCV 데이터가 저장된 SQLite DB 파일 경로
-        self.DB_FILE = os.path.join(base_dir, "market_ohlcv.db")
-        # 데이터를 최신화하는 스크립트 파일 경로
-        self.DATA_SCRIPT = os.path.join(base_dir, "stock_data.py")
+        # 1) 기본으로 코드 위치(로컬에서 작업 디렉터리) 아래를 시도
+        base_dir = Path(__file__).parent
+        print(f"[Config] Base directory: {base_dir}")
+
+        db_path = base_dir / "market_ohlcv.db"
+        test_file = base_dir / ".writetest"
+
+        # 2) 쓰기 가능 여부 체크: 테스트 파일 생성→삭제 시도
+        try:
+            print(f"[Config] Testing write permission at {base_dir} …")
+            with open(test_file, "w") as f:
+                f.write("ok")
+            test_file.unlink()
+
+            # 성공하면 이 위치를 그대로 사용
+            self.DB_FILE = str(db_path)
+            print(f"[Config] ✅ Write test succeeded. Using DB_FILE = {self.DB_FILE}")
+
+        except (OSError, PermissionError) as e:
+            # 실패(읽기 전용)하면 홈 디렉터리 아래로 폴백
+            print(f"[Config] ⚠️ Write test failed ({e}). Falling back to home directory.")
+            home = Path.home() / ".streamlit" / "stock_app"
+            home.mkdir(parents=True, exist_ok=True)
+            self.DB_FILE = str(home / "market_ohlcv.db")
+            print(f"[Config] Using DB_FILE = {self.DB_FILE}")
+
+        # data script 경로는 변함 없이 스크립트 폴더에서 참조
+        self.DATA_SCRIPT = str(base_dir / "stock_data.py")
+        print(f"[Config] DATA_SCRIPT = {self.DATA_SCRIPT}")
 
 
 class DatabaseUpdater:

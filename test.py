@@ -1,3 +1,4 @@
+"""
 import sqlite3
 from pykrx import stock
 
@@ -14,4 +15,17 @@ cursor.execute("VACUUM;")
 conn.commit()
 
 conn.close()
+"""
 
+
+import ntplib
+from datetime import datetime
+import pytz
+
+client = ntplib.NTPClient()
+resp   = client.request("pool.ntp.org", version=3)
+utc_dt = datetime.utcfromtimestamp(resp.tx_time)
+seoul  = pytz.timezone("Asia/Seoul")
+now    = seoul.localize(utc_dt)
+
+print(now)

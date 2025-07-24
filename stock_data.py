@@ -4,16 +4,19 @@ import requests
 from pykrx import stock
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
+import ntplib
 
 # ————————————————————————————————
-# 0) 네이버 HEAD 요청으로 현재 시각(Asia/Seoul) 가져오기
+# 0) NTP 서버로부터 현재 시각(Asia/Seoul) 가져오기
 # ————————————————————————————————
 def get_now_seoul():
-    resp = requests.head("https://www.naver.com", timeout=5)
-    resp.raise_for_status()
-    date_str = resp.headers["Date"]             # e.g. 'Thu, 17 Jul 2025 08:45:12 GMT'
-    dt_utc   = parsedate_to_datetime(date_str)  # tzinfo=UTC
-    seoul_tz = timezone(timedelta(hours=9))     # UTC+9
+    client = ntplib.NTPClient()
+    # pool.ntp.org에서 UDP로 시간 요청
+    resp = client.request("pool.ntp.org", version=3)
+    # UTC 기준 datetime 생성
+    dt_utc = datetime.fromtimestamp(resp.tx_time, tz=timezone.utc)
+    # 서울(UTC+9) 타임존으로 변환
+    seoul_tz = timezone(timedelta(hours=9))
     return dt_utc.astimezone(seoul_tz)
 
 # ————————————————————————————————

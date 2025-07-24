@@ -3,7 +3,6 @@ import sqlite3
 import requests
 from pykrx import stock
 from datetime import datetime, timezone, timedelta
-from email.utils import parsedate_to_datetime
 import ntplib
 
 # ————————————————————————————————

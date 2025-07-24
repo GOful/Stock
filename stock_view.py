@@ -17,7 +17,7 @@ class Config:
         base_dir = Path(__file__).parent
         # SQLite DB 파일 경로
         self.DB_FILE = str(base_dir / "market_ohlcv.db")
-        # 데이터 업데이트 스크립트 경로 (GitHub Actions에서 실행됨)
+        # 데이터 업데이트 스크립트 경로
         self.DATA_SCRIPT = str(base_dir / "stock_data.py")
 
 class DatabaseUpdater:
@@ -27,10 +27,8 @@ class DatabaseUpdater:
     def update(self) -> date:
         # 최초 실행 시 한 번만 최신 DB 날짜를 읽어와 표시
         if "db_updated" not in st.session_state:
-            with st.spinner("앱 시작: DB 최신화 정보를 불러오는 중입니다..."):
-                # GitHub Actions 워크플로우가 별도로 데이터 업데이트를 담당하므로 subprocess 호출 제거
+            with st.spinner("앱 시작: DB 최신 날짜를 조회 중입니다..."):
                 pass
-            # 최신 날짜 조회
             conn = sqlite3.connect(self.db_file)
             latest_str = conn.cursor().execute(
                 "SELECT MAX(date) FROM market_ohlcv"
@@ -167,7 +165,7 @@ class RecommendationEngine:
         for cond in self.conditions:
             s = self._tickers_for(cond)
             result = s if result is None else (
-                result & s if cond.logic=="AND" else result | s
+                (result & s) if cond.logic=="AND" else (result | s)
             )
         if result is None:
             result = set(self.latest['0']['ticker'])
@@ -179,14 +177,17 @@ class RecommendationEngine:
             mask = df_day['change_rate']>0 if cond.name.startswith("pos") else df_day['change_rate']<0
             return set(df_day[mask]['ticker'])
         if cond.name == "junk":
+            # 1) 거래대금 ≥500억
             s1 = set(
                 self.df_period.groupby('ticker')['value']
                               .max().loc[lambda x: x>=5e10]
                               .index
             )
+            # 2) 종가 상승 <3배
             min_close = self.df_period.groupby('ticker')['close'].min()
             latest_c  = self.latest['0'].set_index('ticker')['close']
             s2 = set((latest_c / min_close).loc[lambda x: x<3].index)
+            # 3) 스팩/우선주 제외 & 종가 ≥1000
             df0 = self.latest['0'].set_index('ticker')
             s3 = {
                 t for t in latest_c.index
@@ -233,7 +234,7 @@ class UIManager:
             return
 
         df = df.rename(columns={
-            'ticker':'종목코드','name':'종목명','open':'시가','high':'고가',
+            'ticker':'종목코드','종목명':'종목명','open':'시가','high':'고가',
             'low':'저가','close':'종가','volume':'거래량',
             'value':'거래대금','change_rate':'등락률','market_cap':'시가총액'
         })

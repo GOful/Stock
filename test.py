@@ -1,4 +1,4 @@
-"""
+#"""
 import sqlite3
 from pykrx import stock
 
@@ -15,9 +15,9 @@ cursor.execute("VACUUM;")
 conn.commit()
 
 conn.close()
+#"""
+
 """
-
-
 import ntplib
 from datetime import datetime
 import pytz
@@ -29,3 +29,4 @@ seoul  = pytz.timezone("Asia/Seoul")
 now    = seoul.localize(utc_dt)
 
 print(now)
+"""

@@ -4,11 +4,7 @@ import requests
 from pykrx import stock
 from datetime import datetime, timezone, timedelta
 import ntplib
-import logging
-import warnings
 
-logging.getLogger("streamlit.elements.lib.policies").setLevel(logging.ERROR)
-warnings.filterwarnings("ignore", category=FutureWarning)
 # ————————————————————————————————
 # 0) NTP 서버로부터 현재 시각(Asia/Seoul) 가져오기
 # ————————————————————————————————
@@ -152,7 +148,7 @@ for single_date in daterange(start_date, end_date):
         # 5) 휴장일 필터링(close == 0)
         ohlcv = ohlcv[ohlcv["close"] != 0]
         if ohlcv.empty:
-            print(f"{date_str} ▶ 데이터없음(휴장일)")
+            print(f"{date_str} ▶ close가 0인 데이터만 있어 스킵")
             continue
 
         # 6) DB에 저장

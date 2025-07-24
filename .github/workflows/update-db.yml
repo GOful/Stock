@@ -3,7 +3,7 @@ name: Update market_ohlcv.db
 # 수동 실행, 또는 매일 00:00 KST (UTC 15:00)에 스케줄 실행
 on:
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '1 8 * * *'    # UTC 08:01 → KST 17:01
   workflow_dispatch:
 
 jobs:

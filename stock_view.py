@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 import logging
 import warnings
+from browser_detection import browser_detection_engine
 
 # 로그 및 경고 설정
 logging.getLogger("streamlit.elements.lib.policies").setLevel(logging.ERROR)
@@ -16,7 +17,11 @@ logging.basicConfig(
     format="%(asctime)s  접속 기록  %(message)s",
     level=logging.INFO,
     datefmt="%Y-%m-%d %H:%M:%S"
+    
 )
+
+ua_info = browser_detection_engine()  # singleRun=True 기본값으로 한번만 실행
+user_agent = ua_info.get("userAgent", "Unknown")
 
 class Config:
     def __init__(self):

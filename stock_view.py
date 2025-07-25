@@ -69,6 +69,14 @@ class CalendarManager:
         idx = bisect.bisect_left(days, target)
         return target if idx < len(days) and days[idx] == target else days[max(idx - 1, 0)]
 
+    @staticmethod
+    def get_recent_n_trading_days(days, end_date, n=3):
+        """
+        end_date 기준으로 과거 거래일 n개를 반환 (최신순, 중복 없이)
+        """
+        idx = bisect.bisect_right(days, end_date)
+        return days[max(0, idx - n):idx][::-1]  # 최신 → 과거 순서
+
 
 # ──────────────────────────────
 # 데이터 로딩 클래스
@@ -202,9 +210,12 @@ class StockRecommenderApp:
                 st.warning("선택 기간에 데이터가 없습니다.")
                 return
 
+            recent_days = self.calendar.get_recent_n_trading_days(trading_days, end_date, 3)
+
+
             latest = {
-                str(i): df_all[df_all['date_only'] == self.calendar.prev_trading_day(trading_days, end_date - timedelta(days=i))]
-                for i in [0, 1, 2]
+                str(i): df_all[df_all['date_only'] == recent_days[i]]
+                for i in range(len(recent_days))
             }
 
             tickers = RecommendationEngine(conditions, df_period, latest).run()

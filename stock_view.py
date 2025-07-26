@@ -51,7 +51,7 @@ class DBManager:
                 df = pd.read_sql_query(
                     """
                     SELECT date, ticker, name AS stock_name, open, high, low, close,
-                        volume, value, change_rate, market_cap
+                        volume, value, change_rate, market_cap, "thstrm_amount"
                     FROM market_ohlcv
                     """, conn, parse_dates=["date"]
                 )
@@ -88,18 +88,21 @@ class TradingCalendar:
 class Utility:
     @staticmethod
     def format_unit(x) -> str:
-        """숫자를 한국 단위로 변환"""
+        """숫자를 한국 단위로 변환 (음수도 지원)"""
         try:
-            if x >= 1e12:
-                return f"{x / 1e12:.2f}조"
-            elif x >= 1e8:
-                return f"{x / 1e8:.1f}억"
-            elif x >= 1e4:
-                return f"{x / 1e4:.0f}만"
+            sign = '-' if x < 0 else ''
+            x_abs = abs(x)
+            if x_abs >= 1e12:
+                return f"{sign}{x_abs / 1e12:.2f}조"
+            elif x_abs >= 1e8:
+                return f"{sign}{x_abs / 1e8:.1f}억"
+            elif x_abs >= 1e4:
+                return f"{sign}{x_abs / 1e4:.0f}만"
             else:
-                return f"{x:,}"
+                return f"{sign}{x_abs:,}"
         except Exception:
             return str(x)
+
 
     @staticmethod
     def default_date_range(trading_days: List[date], delta: int = 200) -> Tuple[date, date]:
@@ -268,6 +271,7 @@ class StockRecommenderApp:
 
             # 보기 좋은 컬럼 변환
             df_result['시가총액'] = df_result['market_cap'].apply(Utility.format_unit)
+            df_result['영업이익(1q)'] = df_result['thstrm_amount'].apply(Utility.format_unit)
             df_result['거래대금'] = df_result['value'].apply(Utility.format_unit)
             df_result['거래량'] = df_result['volume'].apply(Utility.format_unit)
             df_result['차트'] = df_result['ticker'].apply(lambda x: f"https://finance.naver.com/item/fchart.naver?code={x}")
@@ -275,7 +279,7 @@ class StockRecommenderApp:
             st.subheader(f"추천 종목 {len(df_result)}개 ({end_date})")
             st.data_editor(
                 df_result[[
-                    'ticker', '차트', 'stock_name', '시가총액',
+                    'ticker', '차트', 'stock_name', '시가총액', '영업이익(1q)',
                     '거래량', '거래대금', 'change_rate'
                 ]].rename(columns={
                     'ticker': '종목코드', 'stock_name': '종목명', 'change_rate': '등락률'

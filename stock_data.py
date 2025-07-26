@@ -44,7 +44,7 @@ print(f"데이터 수집 구간: {start_date} ▶ {end_date}")
 # DB 경로 설정 (스크립트 파일 기준 같은 폴더)
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "market_ohlcv.db"          # 메인 OHLCV DB
-DB_PATH_2 = BASE_DIR / "thstrm_amount_1q.db"    # 추가 재무정보 DB
+DB_PATH_2 = BASE_DIR / "operating_income_1q_naver.db"    # 추가 재무정보 DB
 
 print("cwd:", os.getcwd())
 print("DB absolute path:", DB_PATH)

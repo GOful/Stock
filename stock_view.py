@@ -289,7 +289,7 @@ class StockRecommenderApp:
                 column_config={
                     '차트': st.column_config.LinkColumn(label='차트', display_text='📈')
                 },
-                hide_index=True, height=450
+                hide_index=True, height=800
             )
 
 # ──────────────
